@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f7f5f0;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline}
+input,select,button{font:inherit}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <div style="position:sticky;top:0;z-index:20;background:var(--bg,#f7f5f0);border-bottom:1px solid var(--line,#e6e1d6)">
+    <div style="max-width:1240px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:20px">
+      <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <div style="width:22px;height:22px;border-radius:6px;background:var(--accent,#3a5a80)"></div>
+        <div style="font-weight:700;font-size:16px;letter-spacing:-0.01em">Dugovanja</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:14px;min-width:0">
+        <div onClick="{{ goHome }}" style="{{ navHomeStyle }}">Pregled</div>
+        <sc-if value="{{ isSupplier }}" hint-placeholder-val="{{ false }}">
+          <div style="color:var(--muted,#6f6a60)">/</div>
+          <div style="padding:6px 10px;border-radius:8px;background:var(--surface,#fff);border:1px solid var(--line,#e6e1d6);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.name }}</div>
+        </sc-if>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:8px">
+        <button onClick="{{ openSupplier }}" style="height:36px;padding:0 14px;border-radius:var(--radius,10px);border:1px solid var(--line,#e6e1d6);background:var(--surface,#fffdf9);color:var(--ink,#23211d);cursor:pointer;font-size:14px;font-weight:500;white-space:nowrap" style-hover="border-color:var(--muted,#6f6a60)">{{ lblSupplier }}</button>
+        <button onClick="{{ openInvoiceTop }}" style="height:36px;padding:0 14px;border-radius:var(--radius,10px);border:none;background:var(--accent,#3a5a80);color:#fff;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap" style-hover="opacity:0.9">{{ lblInvoice }}</button>
+      </div>
+    </div>
+    <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
+      <div style="border-top:1px solid var(--line,#e6e1d6);background:oklch(0.97 0.035 85)">
+        <div style="max-width:1240px;margin:0 auto;padding:9px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;font-size:13.5px">
+          <sc-if value="{{ hasOverdue }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:8px;color:oklch(0.48 0.16 27);font-weight:600">
+              <div style="width:8px;height:8px;border-radius:50%;background:oklch(0.55 0.18 27)"></div>
+              <div>Kasni: {{ overdueCountText }} · {{ totalOverdueFmt }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasSoon }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:8px;color:oklch(0.47 0.1 65);font-weight:600">
+              <div style="width:8px;height:8px;border-radius:50%;background:oklch(0.7 0.14 75)"></div>
+              <div>Dospeva u narednih {{ W }} dana: {{ soonCountText }} · {{ totalSoonFmt }}</div>
+            </div>
+          </sc-if>
+          <div style="flex:1"></div>
+          <sc-if value="{{ nextDue }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ nextDue.open }}" style="cursor:pointer;color:var(--ink,#23211d)">Sledeće: <b>{{ nextDue.sup }}</b> · {{ nextDue.daysText }} →</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:28px 20px 60px">
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+        <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Pregled</h1>
+        <div style="color:var(--muted,#6f6a60);font-size:14px">Danas, {{ todayFmt }}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px">
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:18px 20px">
+          <div style="font-size:13px;color:var(--muted,#6f6a60);margin-bottom:8px">Ukupno zaduženje</div>
+          <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ totalDebtFmt }}</div>
+        </div>
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:18px 20px">
+          <div style="font-size:13px;color:oklch(0.47 0.1 65);margin-bottom:8px;font-weight:500">Dospeva u narednih {{ W }} dana</div>
+          <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ totalSoonFmt }}</div>
+        </div>
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:18px 20px">
+          <div style="font-size:13px;color:oklch(0.48 0.16 27);margin-bottom:8px;font-weight:500">Dospelo / kasni</div>
+          <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:oklch(0.45 0.15 27)">{{ totalOverdueFmt }}</div>
+        </div>
+      </div>
+
+      <div style="{{ dashGrid }}">
+        <div style="min-width:0;background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);overflow:hidden">
+          <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line,#e6e1d6)">
+            <div style="font-weight:600;font-size:16px">Dobavljači</div>
+            <div style="font-size:13px;color:var(--muted,#6f6a60)">{{ supplierCountText }}</div>
+          </div>
+          <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:minmax(130px,1.5fr) repeat(3,minmax(0,1fr)) minmax(0,0.9fr) 150px;gap:12px;padding:10px 20px;font-size:12px;color:var(--muted,#6f6a60);font-weight:500;border-bottom:1px solid var(--line,#e6e1d6)">
+              <div>Dobavljač</div><div style="text-align:right">Ukupan dug</div><div style="text-align:right">Dospeva u {{ W }} dana</div><div style="text-align:right">Dospelo / kasni</div><div style="text-align:right">Najbliži rok</div><div style="text-align:right">Status</div>
+            </div>
+            <sc-for list="{{ supplierRows }}" as="s" hint-placeholder-count="8">
+              <div onClick="{{ s.open }}" style="display:grid;grid-template-columns:minmax(130px,1.5fr) repeat(3,minmax(0,1fr)) minmax(0,0.9fr) 150px;gap:12px;padding:13px 20px;font-size:14px;align-items:center;border-bottom:1px solid var(--line,#e6e1d6);cursor:pointer;font-variant-numeric:tabular-nums" style-hover="background:var(--bg,#f7f5f0)">
+                <div style="font-weight:600">{{ s.name }}</div>
+                <div style="text-align:right;font-weight:600;white-space:nowrap">{{ s.totalFmt }}</div>
+                <div style="{{ s.soonStyle }}">{{ s.soonFmt }}</div>
+                <div style="{{ s.overStyle }}">{{ s.overFmt }}</div>
+                <div style="text-align:right;color:var(--muted,#6f6a60);font-size:13px">{{ s.nextText }}</div>
+                <div style="display:flex;justify-content:flex-end"><div style="{{ s.pill }}">{{ s.label }}</div></div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:minmax(130px,1.5fr) repeat(3,minmax(0,1fr)) minmax(0,0.9fr) 150px;gap:12px;padding:14px 20px;font-size:14px;font-weight:700;background:var(--accent-soft,#eef2f7);font-variant-numeric:tabular-nums">
+              <div>Ukupno</div><div style="text-align:right">{{ totalDebtFmt }}</div><div style="text-align:right">{{ totalSoonFmt }}</div><div style="text-align:right">{{ totalOverdueFmt }}</div><div></div><div></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ supplierRows }}" as="s" hint-placeholder-count="6">
+              <div onClick="{{ s.open }}" style="padding:14px 16px;border-bottom:1px solid var(--line,#e6e1d6);display:flex;flex-direction:column;gap:6px;cursor:pointer">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <div style="font-weight:600;font-size:15px">{{ s.name }}</div>
+                  <div style="{{ s.pill }}">{{ s.label }}</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted,#6f6a60);font-variant-numeric:tabular-nums">
+                  <div>{{ s.mobileSub }}</div>
+                  <div style="font-weight:700;color:var(--ink,#23211d);font-size:15px">{{ s.totalFmt }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding:14px 16px;display:flex;justify-content:space-between;font-weight:700;background:var(--accent-soft,#eef2f7)"><div>Ukupno</div><div>{{ totalDebtFmt }}</div></div>
+          </sc-if>
+        </div>
+
+        <div style="{{ panelStyle }}">
+          <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);overflow:hidden">
+            <div style="padding:16px 18px;border-bottom:1px solid var(--line,#e6e1d6)">
+              <div style="font-weight:600;font-size:16px">Dospeva uskoro</div>
+              <div style="font-size:13px;color:var(--muted,#6f6a60);margin-top:2px">Kasni i narednih {{ W }} dana</div>
+            </div>
+            <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+              <div onClick="{{ a.open }}" style="display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line,#e6e1d6);cursor:pointer" style-hover="background:var(--bg,#f7f5f0)">
+                <div style="{{ a.bar }}"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <div style="font-weight:600;font-size:14px">{{ a.sup }}</div>
+                    <div style="font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ a.amt }}</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-top:3px">
+                    <div style="color:var(--muted,#6f6a60)">Fakt. {{ a.no }} · rok {{ a.due }}</div>
+                    <div style="{{ a.daysStyle }}">{{ a.daysText }}</div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noAlerts }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:28px 18px;text-align:center;color:var(--muted,#6f6a60);font-size:14px">Nema faktura koje dospevaju.</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:28px;font-size:12px;color:var(--muted,#6f6a60);display:flex;gap:16px;flex-wrap:wrap">
+        <div>Podaci se čuvaju u ovom browseru.</div>
+        <div onClick="{{ resetDemo }}" style="cursor:pointer;text-decoration:underline">Vrati demo podatke</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSupplier }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ goHome }}" style="font-size:14px;color:var(--muted,#6f6a60);cursor:pointer;margin-bottom:14px;display:inline-block">← Svi dobavljači</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-0.02em">{{ cur.name }}</h1>
+            <div style="{{ cur.pill }}">{{ cur.label }}</div>
+          </div>
+          <div style="color:var(--muted,#6f6a60);font-size:14px;margin-top:6px">{{ cur.meta }}</div>
+        </div>
+        <button onClick="{{ openInvoiceCur }}" style="height:38px;padding:0 16px;border-radius:var(--radius,10px);border:1px solid var(--accent,#3a5a80);background:transparent;color:var(--accent,#3a5a80);cursor:pointer;font-size:14px;font-weight:600">+ Nova faktura</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px">
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:16px 20px">
+          <div style="font-size:13px;color:var(--muted,#6f6a60);margin-bottom:6px">Ukupan dug</div>
+          <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em">{{ cur.totalFmt }}</div>
+        </div>
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:16px 20px">
+          <div style="font-size:13px;color:oklch(0.47 0.1 65);margin-bottom:6px;font-weight:500">Dospeva u {{ W }} dana</div>
+          <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em">{{ cur.soonFmt }}</div>
+        </div>
+        <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);padding:16px 20px">
+          <div style="font-size:13px;color:oklch(0.48 0.16 27);margin-bottom:6px;font-weight:500">Dospelo / kasni</div>
+          <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;color:oklch(0.45 0.15 27)">{{ cur.overFmt }}</div>
+        </div>
+      </div>
+
+      <div style="{{ supGrid }}">
+        <div style="min-width:0;background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);overflow:hidden">
+          <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line,#e6e1d6)">
+            <div style="font-weight:600;font-size:16px">Fakture <span style="color:var(--muted,#6f6a60);font-weight:400;font-size:14px">{{ invCountText }}</span></div>
+            <div onClick="{{ toggleHide }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--muted,#6f6a60);user-select:none">
+              <div>Sakrij plaćene</div>
+              <div style="{{ switchTrack }}"><div style="{{ switchKnob }}"></div></div>
+            </div>
+          </div>
+          <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:36px minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) 120px 74px;gap:10px;padding:10px 20px;font-size:12px;color:var(--muted,#6f6a60);font-weight:500;border-bottom:1px solid var(--line,#e6e1d6)">
+              <div>R.br.</div><div>Faktura</div><div style="text-align:right">Iznos</div><div>Rok plaćanja</div><div style="text-align:right">Uplaćeno</div><div style="text-align:right">Saldo</div><div>Status</div><div></div>
+            </div>
+          </sc-if>
+          <sc-for list="{{ invRows }}" as="r" hint-placeholder-count="6">
+            <div style="border-bottom:1px solid var(--line,#e6e1d6)">
+              <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ r.toggle }}" style="display:grid;grid-template-columns:36px minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) 120px 74px;gap:10px;padding:12px 20px;font-size:14px;align-items:center;cursor:pointer;font-variant-numeric:tabular-nums" style-hover="background:var(--bg,#f7f5f0)">
+                  <div style="color:var(--muted,#6f6a60)">{{ r.rb }}</div>
+                  <div><div style="font-weight:600">{{ r.date }}</div><div style="font-size:12px;color:var(--muted,#6f6a60)">br. {{ r.no }}</div></div>
+                  <div style="text-align:right;white-space:nowrap">{{ r.amt }}</div>
+                  <div><div>{{ r.due }}</div><div style="{{ r.daysStyle }}">{{ r.daysText }}</div></div>
+                  <div style="text-align:right;color:var(--muted,#6f6a60);white-space:nowrap">{{ r.paid }}</div>
+                  <div style="text-align:right;font-weight:600;white-space:nowrap">{{ r.rem }}</div>
+                  <div><div style="{{ r.pill }}">{{ r.label }}</div></div>
+                  <div style="display:flex;justify-content:flex-end">
+                    <sc-if value="{{ r.canPay }}" hint-placeholder-val="{{ true }}">
+                      <button onClick="{{ r.pay }}" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line,#e6e1d6);background:var(--surface,#fffdf9);color:var(--ink,#23211d);cursor:pointer;font-size:12.5px;font-weight:600" style-hover="border-color:var(--accent,#3a5a80);color:var(--accent,#3a5a80)">Uplata</button>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ r.toggle }}" style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;cursor:pointer;font-variant-numeric:tabular-nums">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <div style="font-weight:600">{{ r.rb }}. {{ r.date }} <span style="color:var(--muted,#6f6a60);font-weight:400;font-size:13px">br. {{ r.no }}</span></div>
+                    <div style="{{ r.pill }}">{{ r.label }}</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted,#6f6a60)">
+                    <div>Iznos {{ r.amt }}</div><div>Rok {{ r.due }}</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div style="{{ r.daysStyle }}">{{ r.daysText }}</div>
+                    <div style="font-weight:700;font-size:15px">Saldo {{ r.rem }}</div>
+                  </div>
+                  <sc-if value="{{ r.canPay }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ r.pay }}" style="height:44px;margin-top:4px;border-radius:var(--radius,10px);border:1px solid var(--line,#e6e1d6);background:var(--surface,#fffdf9);color:var(--accent,#3a5a80);font-weight:600;cursor:pointer">Unesi uplatu</button>
+                  </sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.expanded }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:4px 20px 16px 20px;background:var(--bg,#f7f5f0);border-top:1px dashed var(--line,#e6e1d6)">
+                  <div style="font-size:12px;color:var(--muted,#6f6a60);font-weight:500;padding:10px 0 6px">Uplate</div>
+                  <sc-for list="{{ r.payments }}" as="p" hint-placeholder-count="1">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:13.5px;font-variant-numeric:tabular-nums">
+                      <div>{{ p.date }}</div>
+                      <div style="flex:1"></div>
+                      <div style="font-weight:600">{{ p.amt }}</div>
+                      <div onClick="{{ p.del }}" style="cursor:pointer;color:var(--muted,#6f6a60);font-size:12px;text-decoration:underline">ukloni</div>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ r.noPayments }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:13.5px;color:var(--muted,#6f6a60);padding:4px 0">Još nema uplata.</div>
+                  </sc-if>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap">
+                    <div style="font-size:12.5px;color:var(--muted,#6f6a60)">Valuta {{ r.term }} dana od datuma fakture</div>
+                    <div onClick="{{ r.del }}" style="cursor:pointer;color:oklch(0.5 0.16 27);font-size:12.5px;font-weight:600">Obriši fakturu</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noInvRows }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:36px 20px;text-align:center;color:var(--muted,#6f6a60);font-size:14px">{{ noInvText }}</div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div style="background:var(--surface,#fffdf9);border:1px solid var(--line,#e6e1d6);border-radius:var(--radius,10px);overflow:hidden">
+            <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line,#e6e1d6)">
+              <div style="font-weight:600;font-size:16px">Kontakti komercijalista</div>
+              <div onClick="{{ openContact }}" style="cursor:pointer;color:var(--accent,#3a5a80);font-size:13.5px;font-weight:600">+ Dodaj</div>
+            </div>
+            <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="2">
+              <div style="padding:12px 18px;border-bottom:1px solid var(--line,#e6e1d6);display:flex;gap:10px;align-items:flex-start">
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:600;font-size:14px">{{ c.name }}</div>
+                  <div style="font-size:12.5px;color:var(--muted,#6f6a60);margin-top:2px">{{ c.role }}</div>
+                  <a href="{{ c.tel }}" style="display:inline-block;margin-top:6px;font-size:14px;color:var(--accent,#3a5a80);font-variant-numeric:tabular-nums">{{ c.phone }}</a>
+                </div>
+                <div onClick="{{ c.del }}" style="cursor:pointer;color:var(--muted,#6f6a60);font-size:18px;line-height:1;padding:2px 4px">×</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noContacts }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:20px 18px;color:var(--muted,#6f6a60);font-size:14px">Nema unetih kontakata.</div>
+            </sc-if>
+          </div>
+          <div onClick="{{ deleteSupplier }}" style="font-size:12.5px;color:var(--muted,#6f6a60);cursor:pointer;text-decoration:underline;padding:0 4px">Obriši dobavljača</div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:50;background:rgba(30,26,20,0.32);display:flex;align-items:center;justify-content:center;padding:16px">
+      <div onClick="{{ stop }}" style="width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;background:var(--surface,#fffdf9);border-radius:calc(var(--radius,10px) + 4px);box-shadow:0 20px 60px rgba(30,26,20,0.18);padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div style="font-size:18px;font-weight:700">{{ modalTitle }}</div>
+          <div onClick="{{ closeModal }}" style="cursor:pointer;font-size:22px;line-height:1;color:var(--muted,#6f6a60)">×</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <sc-if value="{{ m.invoice }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Dobavljač
+              <select value="{{ f.supplierId }}" onChange="{{ on.supplierId }}" style="height:42px;padding:0 10px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px">
+                <sc-for list="{{ supplierOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.name }}</option></sc-for>
+              </select>
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Broj fakture
+                <input value="{{ f.number }}" onChange="{{ on.number }}" placeholder="npr. 1045/26" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Datum
+                <input type="date" value="{{ f.date }}" onChange="{{ on.date }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Iznos (RSD)
+                <input inputMode="decimal" value="{{ f.amount }}" onChange="{{ on.amount }}" placeholder="0,00" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Valuta (dana)
+                <input type="number" value="{{ f.term }}" onChange="{{ on.term }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+            </div>
+            <div style="background:var(--accent-soft,#eef2f7);border-radius:8px;padding:12px 14px;font-size:14px;display:flex;justify-content:space-between;gap:8px">
+              <div style="color:var(--muted,#6f6a60)">Rok plaćanja</div>
+              <div style="font-weight:700">{{ dueDatePreview }}</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ m.payment }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--bg,#f7f5f0);border-radius:8px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-weight:600">{{ payInv.sup }} · br. {{ payInv.no }}</div>
+              <div style="color:var(--muted,#6f6a60);font-size:13px">Iznos {{ payInv.amt }} · preostalo <b style="color:var(--ink,#23211d)">{{ payInv.rem }}</b></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Datum uplate
+                <input type="date" value="{{ f.date }}" onChange="{{ on.date }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Iznos (RSD)
+                <input inputMode="decimal" value="{{ f.amount }}" onChange="{{ on.amount }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+            </div>
+            <div onClick="{{ fillFull }}" style="font-size:13px;color:var(--accent,#3a5a80);cursor:pointer;font-weight:600">Uplati ceo preostali iznos</div>
+          </sc-if>
+
+          <sc-if value="{{ m.supplier }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Naziv
+              <input value="{{ f.name }}" onChange="{{ on.name }}" placeholder="npr. Agrofina" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px"></input>
+            </label>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">PIB
+                <input value="{{ f.pib }}" onChange="{{ on.pib }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Valuta (dana)
+                <input type="number" value="{{ f.term }}" onChange="{{ on.term }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px;min-width:0"></input>
+              </label>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ m.contact }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Ime i prezime
+              <input value="{{ f.name }}" onChange="{{ on.name }}" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px"></input>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Uloga
+              <input value="{{ f.role }}" onChange="{{ on.role }}" placeholder="Komercijalista" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px"></input>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted,#6f6a60)">Telefon
+              <input type="tel" value="{{ f.phone }}" onChange="{{ on.phone }}" placeholder="06x xxx xxxx" style="height:42px;padding:0 12px;border:1px solid var(--line,#e6e1d6);border-radius:8px;background:var(--surface,#fffdf9);color:var(--ink,#23211d);font-size:15px"></input>
+            </label>
+          </sc-if>
+
+          <sc-if value="{{ err }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;color:oklch(0.5 0.16 27)">{{ err }}</div>
+          </sc-if>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+            <button onClick="{{ closeModal }}" style="height:42px;padding:0 16px;border-radius:var(--radius,10px);border:1px solid var(--line,#e6e1d6);background:transparent;color:var(--ink,#23211d);cursor:pointer;font-weight:500">Otkaži</button>
+            <button onClick="{{ submit }}" style="height:42px;padding:0 18px;border-radius:var(--radius,10px);border:none;background:var(--accent,#3a5a80);color:#fff;cursor:pointer;font-weight:600">Sačuvaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pravac&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Papir&quot;,&quot;Terakota&quot;,&quot;Maslina&quot;],&quot;default&quot;:&quot;Papir&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vizuelni pravac&quot;},&quot;upozorenjeDana&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:1,&quot;max&quot;:30,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pravila&quot;},&quot;podrazumevaniRok&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:15,&quot;min&quot;:1,&quot;max&quot;:120,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pravila&quot;}}">
+const KEY = 'market-dugovanja-v1';
+const THEMES = {
+  Papir: { bg:'#f7f5f0', surface:'#fffdf9', ink:'#23211d', muted:'#6f6a60', line:'#e7e2d8', accent:'oklch(0.45 0.08 250)', soft:'oklch(0.95 0.015 250)', font:'"Geist", system-ui, sans-serif', radius:'10px' },
+  Terakota: { bg:'#f6f1ea', surface:'#fffcf7', ink:'#2a221c', muted:'#7a6d61', line:'#e9dfd2', accent:'oklch(0.56 0.13 40)', soft:'oklch(0.95 0.025 50)', font:'"Schibsted Grotesk", system-ui, sans-serif', radius:'16px' },
+  Maslina: { bg:'#f3f2ec', surface:'#fbfaf6', ink:'#1f2219', muted:'#686c5d', line:'#e0dfd4', accent:'oklch(0.48 0.08 130)', soft:'oklch(0.95 0.025 125)', font:'"Hanken Grotesk", system-ui, sans-serif', radius:'6px' },
+};
+const ST = {
+  kasni:   { label:'Kasni', fg:'oklch(0.48 0.16 27)', bg:'oklch(0.95 0.035 27)', p:0 },
+  uskoro:  { label:'Uskoro dospeva', fg:'oklch(0.47 0.1 65)', bg:'oklch(0.95 0.06 88)', p:1 },
+  otvoreno:{ label:'Otvoreno', fg:'var(--accent)', bg:'var(--accent-soft)', p:2 },
+  placeno: { label:'Plaćeno', fg:'oklch(0.47 0.1 150)', bg:'oklch(0.95 0.035 150)', p:3 },
+};
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const todayISO = () => iso(new Date());
+const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + Number(n)); return iso(d); };
+const diffDays = (a, b) => Math.round((parseISO(a) - parseISO(b)) / 86400000);
+const r2 = n => Math.round(n * 100) / 100;
+const num = n => { const neg = n < 0; const [i, f] = Math.abs(n).toFixed(2).split('.'); return (neg ? '−' : '') + i.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + f; };
+const fmt = n => num(n) + ' RSD';
+const fdate = s => { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; };
+const dan = n => (n % 10 === 1 && n % 100 !== 11) ? 'dan' : 'dana';
+const fakt = n => n === 1 ? '1 faktura' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? `${n} fakture` : `${n} faktura`;
+const parseAmt = s => { s = String(s ?? '').replace(/\s|RSD/gi, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); return parseFloat(s); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+function seed() {
+  const t = todayISO();
+  const spec = [
+    ['Agrofina', '104512873', [[56,26338.52,'f'],[45,53455.59,'f'],[42,27270.77,'f'],[31,69180.55,'f'],[39,46983.78,'f'],[28,28263.35,'f'],[22,45380.06,8301.55],[10,69991.22,0],[3,54798.86,0]], [{name:'Marko Petrović', role:'Komercijalista', phone:'064 123 4567'}]],
+    ['Bolero', '', [[40,18450,'f'],[25,12300.4,'f']], []],
+    ['Karizma', '', [[30,22100,'f'],[5,16288.18,0]], [{name:'Jelena Ilić', role:'Komercijalista', phone:'063 555 210'}]],
+    ['Mrvica', '', [[20,9870.5,'f'],[9,7420,'f']], []],
+    ['Euro2001', '', [[35,40210,'f'],[2,32438.36,0]], []],
+    ['Delt', '', [[18,14980.2,'f']], []],
+    ['Nenad Jaja', '', [[33,11200,'f'],[20,5443.2,0]], [{name:'Nenad', role:'Vlasnik', phone:'065 300 1122'}]],
+    ['Trikom', '', [[1,5206.9,0]], []],
+    ['Foren', '', [[10,29656.51,0],[4,28881.84,0]], []],
+    ['Marbo', '', [[26,21540,'f']], []],
+  ];
+  const suppliers = [], invoices = [], payments = [];
+  let no = 1000;
+  spec.forEach(([name, pib, invs, contacts]) => {
+    const sid = uid() + name.length;
+    suppliers.push({ id: sid, name, pib, term: 15, contacts: contacts.map(c => ({ ...c, id: uid() })) });
+    invs.forEach(([ago, amount, paid]) => {
+      const id = uid() + (no++);
+      const date = addDays(t, -ago);
+      invoices.push({ id, supplierId: sid, number: `${no}/26`, date, amount, term: 15 });
+      const p = paid === 'f' ? amount : paid;
+      if (p > 0) { let pd = addDays(date, 12); if (diffDays(pd, t) > 0) pd = t; payments.push({ id: uid(), invoiceId: id, date: pd, amount: p }); }
+    });
+  });
+  return { suppliers, invoices, payments };
+}
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.suppliers) return d; } catch (e) {}
+  const d = seed(); try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
+  return d;
+}
+
+class Component extends DCLogic {
+  state = { data: load(), view: 'home', sid: null, hidePaid: true, modal: null, form: {}, err: '', expanded: null, w: typeof window !== 'undefined' ? window.innerWidth : 1200 };
+  componentDidMount() { this._r = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._r); }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); }
+  save(data, extra) { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} this.setState({ data, ...(extra || {}) }); }
+  go(view, sid) { this.setState({ view, sid: sid ?? null, expanded: null }); window.scrollTo(0, 0); }
+  open(modal, form) { this.setState({ modal, form, err: '' }); }
+  setF(k, v) { this.setState(s => ({ form: { ...s.form, [k]: v }, err: '' })); }
+
+  submit() {
+    const { modal, form: f, data } = this.state;
+    const T = todayISO();
+    if (modal === 'invoice') {
+      const amount = parseAmt(f.amount);
+      if (!f.supplierId) return this.setState({ err: 'Izaberite dobavljača.' });
+      if (!(amount > 0)) return this.setState({ err: 'Unesite ispravan iznos.' });
+      if (!f.date) return this.setState({ err: 'Unesite datum fakture.' });
+      const inv = { id: uid(), supplierId: f.supplierId, number: f.number || '—', date: f.date, amount: r2(amount), term: Number(f.term) || 15 };
+      this.save({ ...data, invoices: [...data.invoices, inv] }, { modal: null });
+    } else if (modal === 'payment') {
+      const amount = parseAmt(f.amount);
+      if (!(amount > 0)) return this.setState({ err: 'Unesite ispravan iznos.' });
+      this.save({ ...data, payments: [...data.payments, { id: uid(), invoiceId: f.invoiceId, date: f.date || T, amount: r2(amount) }] }, { modal: null });
+    } else if (modal === 'supplier') {
+      if (!String(f.name || '').trim()) return this.setState({ err: 'Unesite naziv dobavljača.' });
+      const s = { id: uid(), name: f.name.trim(), pib: f.pib || '', term: Number(f.term) || 15, contacts: [] };
+      this.save({ ...data, suppliers: [...data.suppliers, s] }, { modal: null, view: 'supplier', sid: s.id });
+    } else if (modal === 'contact') {
+      if (!String(f.name || '').trim()) return this.setState({ err: 'Unesite ime.' });
+      const c = { id: uid(), name: f.name.trim(), role: f.role || '', phone: f.phone || '' };
+      this.save({ ...data, suppliers: data.suppliers.map(s => s.id === this.state.sid ? { ...s, contacts: [...(s.contacts || []), c] } : s) }, { modal: null });
+    }
+  }
+
+  renderVals() {
+    const W = this.props.upozorenjeDana ?? 7;
+    const defTerm = this.props.podrazumevaniRok ?? 15;
+    const th = THEMES[this.props.pravac] || THEMES.Papir;
+    const { data, view, sid, hidePaid, modal, form, expanded, w } = this.state;
+    const T = todayISO();
+    const mobile = w < 860;
+    const narrow = w < 1180;
+
+    const payBy = {};
+    data.payments.forEach(p => { (payBy[p.invoiceId] = payBy[p.invoiceId] || []).push(p); });
+    const supById = {}; data.suppliers.forEach(s => { supById[s.id] = s; });
+    const info = inv => {
+      const pays = (payBy[inv.id] || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const paid = r2(pays.reduce((a, p) => a + p.amount, 0));
+      const rem = Math.max(0, r2(inv.amount - paid));
+      const due = addDays(inv.date, inv.term ?? 15);
+      const d = diffDays(due, T);
+      const status = rem <= 0 ? 'placeno' : d < 0 ? 'kasni' : d <= W ? 'uskoro' : 'otvoreno';
+      return { ...inv, pays, paid, rem, due, d, status };
+    };
+    const all = data.invoices.map(info);
+    const daysText = i => i.status === 'placeno' ? (i.paid > i.amount + 0.001 ? `više uplaćeno ${num(i.paid - i.amount)}` : 'izmireno') : i.d < 0 ? `kasni ${-i.d} ${dan(-i.d)}` : i.d === 0 ? 'dospeva danas' : i.d === 1 ? 'dospeva sutra' : `za ${i.d} ${dan(i.d)}`;
+    const daysStyle = (i, extra) => ({ fontSize: 12.5, fontWeight: i.status === 'kasni' || i.status === 'uskoro' ? 600 : 400, color: i.status === 'kasni' ? ST.kasni.fg : i.status === 'uskoro' ? ST.uskoro.fg : 'var(--muted)', whiteSpace: 'nowrap', ...(extra || {}) });
+    const pill = st => ({ display: 'inline-flex', alignItems: 'center', height: 24, padding: '0 10px', borderRadius: 999, background: ST[st].bg, color: ST[st].fg, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' });
+
+    const agg = s => {
+      const inv = all.filter(i => i.supplierId === s.id);
+      const sum = f => r2(inv.filter(f).reduce((a, i) => a + i.rem, 0));
+      const total = sum(i => i.rem > 0), soon = sum(i => i.status === 'uskoro'), over = sum(i => i.status === 'kasni');
+      const open = inv.filter(i => i.rem > 0).sort((a, b) => a.due.localeCompare(b.due));
+      const status = over > 0 ? 'kasni' : soon > 0 ? 'uskoro' : total > 0 ? 'otvoreno' : 'placeno';
+      return { s, inv, total, soon, over, next: open[0], status };
+    };
+    const aggs = data.suppliers.map(agg).sort((a, b) => ST[a.status].p - ST[b.status].p || a.s.name.localeCompare(b.s.name));
+    const totDebt = r2(aggs.reduce((a, x) => a + x.total, 0));
+    const totSoon = r2(aggs.reduce((a, x) => a + x.soon, 0));
+    const totOver = r2(aggs.reduce((a, x) => a + x.over, 0));
+    const zeroStyle = (v, color) => ({ textAlign: 'right', whiteSpace: 'nowrap', color: v > 0 ? color : 'var(--muted)', fontWeight: v > 0 ? 600 : 400, opacity: v > 0 ? 1 : 0.6 });
+
+    const supplierRows = aggs.map(x => ({
+      name: x.s.name, totalFmt: fmt(x.total), soonFmt: fmt(x.soon), overFmt: fmt(x.over),
+      soonStyle: zeroStyle(x.soon, ST.uskoro.fg), overStyle: zeroStyle(x.over, ST.kasni.fg),
+      nextText: x.next ? fdate(x.next.due) : '—',
+      mobileSub: x.over > 0 ? `Kasni ${fmt(x.over)}` : x.soon > 0 ? `Dospeva ${fmt(x.soon)}` : x.next ? `Rok ${fdate(x.next.due)}` : 'Sve izmireno',
+      pill: pill(x.status), label: ST[x.status].label, open: () => this.go('supplier', x.s.id),
+    }));
+
+    const alertInv = all.filter(i => i.status === 'kasni' || i.status === 'uskoro').sort((a, b) => a.due.localeCompare(b.due));
+    const alerts = alertInv.map(i => ({
+      sup: supById[i.supplierId]?.name || '—', no: i.number, amt: fmt(i.rem), due: fdate(i.due), daysText: daysText(i),
+      daysStyle: daysStyle(i), bar: { width: 3, borderRadius: 2, alignSelf: 'stretch', background: i.status === 'kasni' ? 'oklch(0.58 0.18 27)' : 'oklch(0.75 0.14 78)' },
+      open: () => this.go('supplier', i.supplierId),
+    }));
+    const overCount = alertInv.filter(i => i.status === 'kasni').length;
+    const soonCount = alertInv.length - overCount;
+    const nextSoon = alertInv.find(i => i.status === 'uskoro');
+
+    const curAgg = view === 'supplier' ? aggs.find(x => x.s.id === sid) : null;
+    let cur = { name: '', meta: '', pill: {}, label: '', totalFmt: '', soonFmt: '', overFmt: '' }, invRows = [], contacts = [], invTotal = 0;
+    if (curAgg) {
+      const s = curAgg.s;
+      cur = { name: s.name, meta: [s.pib ? `PIB ${s.pib}` : null, `Valuta ${s.term ?? 15} dana`].filter(Boolean).join(' · '), pill: pill(curAgg.status), label: ST[curAgg.status].label, totalFmt: fmt(curAgg.total), soonFmt: fmt(curAgg.soon), overFmt: fmt(curAgg.over) };
+      const sorted = curAgg.inv.slice().sort((a, b) => a.date.localeCompare(b.date));
+      invTotal = sorted.length;
+      invRows = sorted.map((i, idx) => ({ i, rb: idx + 1 })).filter(x => !(hidePaid && x.i.status === 'placeno')).map(({ i, rb }) => ({
+        rb, no: i.number, date: fdate(i.date), amt: fmt(i.amount), due: fdate(i.due), daysText: daysText(i), daysStyle: daysStyle(i, { marginTop: 2 }),
+        paid: i.paid > 0 ? fmt(i.paid) : '—', rem: fmt(i.rem), pill: pill(i.status), label: i.status !== 'placeno' && i.paid > 0 ? 'Delimično' : ST[i.status].label,
+        term: i.term ?? 15, canPay: i.rem > 0, expanded: expanded === i.id,
+        payments: i.pays.map(p => ({ date: fdate(p.date), amt: fmt(p.amount), del: () => { if (confirm('Ukloniti ovu uplatu?')) this.save({ ...data, payments: data.payments.filter(x => x.id !== p.id) }); } })),
+        noPayments: i.pays.length === 0,
+        toggle: () => this.setState({ expanded: expanded === i.id ? null : i.id }),
+        pay: e => { e && e.stopPropagation(); this.open('payment', { invoiceId: i.id, date: T, amount: num(i.rem) }); },
+        del: () => { if (confirm('Obrisati fakturu i njene uplate?')) this.save({ ...data, invoices: data.invoices.filter(x => x.id !== i.id), payments: data.payments.filter(x => x.invoiceId !== i.id) }); },
+      }));
+      contacts = (s.contacts || []).map(c => ({ ...c, tel: 'tel:' + String(c.phone || '').replace(/\s/g, ''), del: () => { if (confirm('Ukloniti kontakt?')) this.save({ ...data, suppliers: data.suppliers.map(x => x.id === s.id ? { ...x, contacts: x.contacts.filter(k => k.id !== c.id) } : x) }); } }));
+    }
+
+    const payI = modal === 'payment' ? all.find(i => i.id === form.invoiceId) : null;
+    const payInv = payI ? { sup: supById[payI.supplierId]?.name, no: payI.number, amt: fmt(payI.amount), rem: fmt(payI.rem) } : {};
+    const on = {};
+    ['supplierId', 'number', 'date', 'amount', 'term', 'name', 'pib', 'role', 'phone'].forEach(k => { on[k] = e => this.setF(k, e.target.value); });
+    on.supplierId = e => { const v = e.target.value; this.setState(st => ({ form: { ...st.form, supplierId: v, term: supById[v]?.term ?? defTerm } })); };
+    const openInvoice = sId => this.open('invoice', { supplierId: sId || data.suppliers[0]?.id || '', number: '', date: T, amount: '', term: supById[sId]?.term ?? defTerm });
+    const dueDatePreview = form.date && Number(form.term) >= 0 && form.term !== '' ? `${fdate(addDays(form.date, Number(form.term)))}` : '—';
+
+    return {
+      rootStyle: { '--bg': th.bg, '--surface': th.surface, '--ink': th.ink, '--muted': th.muted, '--line': th.line, '--accent': th.accent, '--accent-soft': th.soft, '--font': th.font, '--radius': th.radius, background: th.bg, color: th.ink, fontFamily: th.font, minHeight: '100vh' },
+      W, isHome: view === 'home' || !curAgg, isSupplier: !!curAgg, isDesktop: !mobile, isMobile: mobile,
+      goHome: () => this.go('home'),
+      navHomeStyle: { padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, color: view === 'home' ? 'var(--ink)' : 'var(--muted)', background: view === 'home' ? 'var(--surface)' : 'transparent', border: view === 'home' ? '1px solid var(--line)' : '1px solid transparent' },
+      lblSupplier: mobile ? '+ Dob.' : '+ Dobavljač', lblInvoice: mobile ? '+ Faktura' : '+ Nova faktura',
+      openSupplier: () => this.open('supplier', { name: '', pib: '', term: defTerm }),
+      openInvoiceTop: () => openInvoice(curAgg ? curAgg.s.id : null),
+      openInvoiceCur: () => openInvoice(curAgg?.s.id),
+      openContact: () => this.open('contact', { name: '', role: 'Komercijalista', phone: '' }),
+      hasAlerts: alertInv.length > 0, hasOverdue: overCount > 0, hasSoon: soonCount > 0,
+      overdueCountText: fakt(overCount), soonCountText: fakt(soonCount),
+      nextDue: nextSoon ? { sup: supById[nextSoon.supplierId]?.name, daysText: daysText(nextSoon), open: () => this.go('supplier', nextSoon.supplierId) } : null,
+      todayFmt: fdate(T), totalDebtFmt: fmt(totDebt), totalSoonFmt: fmt(totSoon), totalOverdueFmt: fmt(totOver),
+      supplierCountText: `${data.suppliers.length} ukupno`, supplierRows, alerts, noAlerts: alerts.length === 0,
+      dashGrid: { display: 'grid', gridTemplateColumns: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 340px', gap: 16, alignItems: 'start' },
+      panelStyle: { position: narrow ? 'static' : 'sticky', top: alertInv.length ? 116 : 76, order: narrow ? -1 : 0, minWidth: 0 },
+      supGrid: { display: 'grid', gridTemplateColumns: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' },
+      cur, invRows, noInvRows: invRows.length === 0,
+      noInvText: invTotal === 0 ? 'Još nema faktura za ovog dobavljača.' : 'Sve fakture su plaćene.',
+      invCountText: hidePaid ? `${invRows.length} aktivnih od ${invTotal}` : `${invTotal}`,
+      toggleHide: () => this.setState({ hidePaid: !hidePaid }),
+      switchTrack: { width: 34, height: 20, borderRadius: 999, background: hidePaid ? 'var(--accent)' : 'var(--line)', position: 'relative', transition: 'background .15s' },
+      switchKnob: { position: 'absolute', top: 2, left: hidePaid ? 16 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.2)', transition: 'left .15s' },
+      contacts, noContacts: contacts.length === 0,
+      deleteSupplier: () => { if (curAgg && confirm(`Obrisati dobavljača ${curAgg.s.name} i sve njegove fakture?`)) { const ids = new Set(curAgg.inv.map(i => i.id)); this.save({ suppliers: data.suppliers.filter(x => x.id !== curAgg.s.id), invoices: data.invoices.filter(i => !ids.has(i.id)), payments: data.payments.filter(p => !ids.has(p.invoiceId)) }, { view: 'home', sid: null }); } },
+      resetDemo: () => { if (confirm('Zameniti sve podatke demo podacima?')) this.save(seed(), { view: 'home' }); },
+      modalOpen: !!modal, m: { invoice: modal === 'invoice', payment: modal === 'payment', supplier: modal === 'supplier', contact: modal === 'contact' },
+      modalTitle: { invoice: 'Nova faktura', payment: 'Unos uplate', supplier: 'Novi dobavljač', contact: 'Novi kontakt' }[modal] || '',
+      f: form, on, err: this.state.err, payInv, dueDatePreview,
+      supplierOptions: data.suppliers.map(s => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name)),
+      fillFull: () => payI && this.setF('amount', num(payI.rem)),
+      closeModal: () => this.setState({ modal: null }),
+      stop: e => e.stopPropagation(),
+      submit: () => this.submit(),
+    };
+  }
+}
+</script>
+</body>
+</html>

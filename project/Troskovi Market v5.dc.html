@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#18191c;-webkit-font-smoothing:antialiased}
+a{color:#f4f4f5;text-decoration:none}
+a:hover{text-decoration:underline}
+input,select,button{font:inherit}
+</style>
+</helmet>
+<div style="min-height:100vh;background:transparent;color:#f4f4f5;color-scheme:dark;position:relative;isolation:isolate;font-family:'Plus Jakarta Sans',system-ui,sans-serif;display:flex">
+  <div style="position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:#131416">
+    <div style="position:absolute;width:620px;height:620px;left:-160px;top:-180px;border-radius:50%;background:rgba(210,214,224,0.30);filter:blur(90px)"></div>
+    <div style="position:absolute;width:520px;height:520px;right:-120px;top:18%;border-radius:50%;background:rgba(130,136,152,0.42);filter:blur(90px)"></div>
+    <div style="position:absolute;width:440px;height:440px;left:30%;top:46%;border-radius:50%;background:rgba(255,255,255,0.16);filter:blur(100px)"></div>
+    <div style="position:absolute;width:680px;height:420px;left:-10%;bottom:-200px;border-radius:50%;background:rgba(90,96,112,0.5);filter:blur(100px)"></div>
+    <div style="position:absolute;width:300px;height:300px;right:22%;bottom:6%;border-radius:50%;background:rgba(235,238,245,0.18);filter:blur(70px)"></div>
+  </div>
+
+  <sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ true }}">
+    <div style="width:272px;flex-shrink:0;position:sticky;top:0;height:100vh;padding:14px 0 14px 14px">
+      <div style="height:100%;display:flex;flex-direction:column;background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:24px;overflow:hidden">
+        <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;padding:20px 20px 18px;cursor:pointer">
+          <div style="width:34px;height:34px;border-radius:11px;background:#f4f4f5;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;border-radius:4px;background:#18191c"></div></div>
+          <div>
+            <div style="font-weight:800;font-size:16px;letter-spacing:-0.02em;line-height:1.2">Dugovanja</div>
+            <div style="font-size:11.5px;color:#8b8b94">Dobavljači marketa</div>
+          </div>
+        </div>
+        <div style="padding:0 12px 12px;border-bottom:1px solid rgba(255,255,255,0.07)">
+          <div onClick="{{ goHome }}" style="{{ navHomeStyle }}">
+            <div style="flex:1">Pregled</div>
+            <sc-if value="{{ alertCount }}" hint-placeholder-val="{{ true }}">
+              <div style="{{ navBadge }}">{{ alertCount }}</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8b8b94">Dobavljači · {{ supplierCount }}</div>
+          <div onClick="{{ openSupplier }}" title="Novi dobavljač" style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;font-weight:700;line-height:1" style-hover="background:rgba(255,255,255,0.16)">+</div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px;padding:0 10px 10px">
+          <sc-for list="{{ sideSuppliers }}" as="s" hint-placeholder-count="8">
+            <div onClick="{{ s.open }}" style="{{ s.navStyle }}" style-hover="background:rgba(255,255,255,0.06)">
+              <div style="{{ s.avatar }}">{{ s.initials }}</div>
+              <div style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div>
+              <div style="{{ s.amtStyle }}">{{ s.short }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin:0 12px 12px;padding:14px;border-radius:18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">
+            <div style="display:flex;align-items:center;gap:7px;color:#fca5a5;font-weight:700"><div style="width:7px;height:7px;border-radius:50%;background:#ef4444"></div>Kasni</div>
+            <div style="font-weight:800;font-variant-numeric:tabular-nums">{{ totalOverdueFmt }}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">
+            <div style="display:flex;align-items:center;gap:7px;color:#fcd34d;font-weight:700"><div style="width:7px;height:7px;border-radius:50%;background:#f5b428"></div>{{ W }} dana</div>
+            <div style="font-weight:800;font-variant-numeric:tabular-nums">{{ totalSoonFmt }}</div>
+          </div>
+          <button onClick="{{ openInvoiceTop }}" style="height:42px;margin-top:2px;border:none;border-radius:12px;background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff;font-weight:700;cursor:pointer;font-size:14px" style-hover="background:#ffffff">+ Nova faktura</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="flex:1;min-width:0">
+    <div style="position:sticky;top:0;z-index:20;background:rgba(20,21,24,0.22);backdrop-filter:blur(30px) saturate(170%);border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div style="{{ headRow }}">
+        <sc-if value="{{ isCompact }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ goHome }}" style="width:32px;height:32px;border-radius:9px;background:#f4f4f5;display:flex;align-items:center;justify-content:center;cursor:pointer"><div style="width:12px;height:12px;border-radius:3px;background:#18191c"></div></div>
+        </sc-if>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#a1a1aa;min-width:0">
+          <div onClick="{{ goHome }}" style="cursor:pointer;font-weight:600">Pregled</div>
+          <sc-if value="{{ isSupplier }}" hint-placeholder-val="{{ false }}"><div>/</div><div style="color:#f4f4f5;font-weight:700;white-space:nowrap">{{ cur.name }}</div></sc-if>
+        </div>
+        <div style="flex:1"></div>
+        <div style="{{ pillsWrap }}">
+        <sc-if value="{{ hasOverdue }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ goHome }}" style="flex-shrink:0;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+            <div style="width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444"></div>Kasni {{ totalOverdueShort }}
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasSoon }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ goHome }}" style="flex-shrink:0;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;background:rgba(245,180,40,0.12);border:1px solid rgba(245,180,40,0.3);color:#fcd34d;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+            <div style="width:7px;height:7px;border-radius:50%;background:#f5b428;box-shadow:0 0 10px #f5b428"></div>{{ W }} dana: {{ totalSoonShort }}
+          </div>
+        </sc-if>
+        </div>
+        <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ openSupplier }}" style="height:36px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;cursor:pointer;font-size:13.5px;font-weight:600;white-space:nowrap">+ Dobavljač</button>
+        </sc-if>
+        <sc-if value="{{ isCompact }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ openInvoiceTop }}" style="height:36px;padding:0 14px;border-radius:12px;border:none;background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff;cursor:pointer;font-size:13.5px;font-weight:700;white-space:nowrap">+ Faktura</button>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="max-width:1360px;margin:0 auto;padding:22px 24px 48px">
+
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ topGrid }}">
+          <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:24px;padding:26px 28px;display:flex;flex-direction:column;gap:20px;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:13.5px;color:#a1a1aa;font-weight:600">Ukupno zaduženje · {{ todayFmt }}</div>
+                <div style="font-size:46px;font-weight:800;letter-spacing:-0.035em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:8px">{{ totalDebtNum }}<span style="font-size:20px;color:#8b8b94;font-weight:700;margin-left:8px;letter-spacing:0">RSD</span></div>
+              </div>
+              <div style="font-size:12.5px;color:#a1a1aa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:6px 12px;border-radius:999px;font-weight:600">{{ debtSuppliersText }}</div>
+            </div>
+            <div style="display:flex;gap:4px;height:12px">
+              <sc-for list="{{ segs }}" as="g" hint-placeholder-count="3"><div style="{{ g }}"></div></sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#fca5a5;font-weight:700"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div>Kasni · {{ overdueCountText }}</div>
+                <div style="font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">{{ totalOverdueFmt }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#fcd34d;font-weight:700"><div style="width:8px;height:8px;border-radius:50%;background:#f5b428"></div>Narednih {{ W }} dana · {{ soonCountText }}</div>
+                <div style="font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">{{ totalSoonFmt }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#d4d4d8;font-weight:700"><div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.6)"></div>Kasnije · {{ laterCountText }}</div>
+                <div style="font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">{{ totalLaterFmt }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:24px;padding:22px 22px 18px;min-width:0;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px">
+              <div style="font-weight:700;font-size:16px">Rokovi plaćanja</div>
+              <div style="font-size:12.5px;color:#8b8b94">narednih {{ tlDays }} dana</div>
+            </div>
+            <div style="flex:1;display:flex;gap:5px;align-items:stretch;min-height:170px">
+              <sc-for list="{{ timeline }}" as="t" hint-placeholder-count="15">
+                <div onClick="{{ t.open }}" title="{{ t.tip }}" style="{{ t.col }}">
+                  <div style="font-size:10.5px;font-weight:700;color:#d4d4d8;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);height:38px;overflow:hidden;display:flex;align-items:center;justify-content:flex-start;line-height:1">{{ t.amt }}</div>
+                  <div style="flex:1;display:flex;align-items:flex-end;width:100%"><div style="{{ t.bar }}"></div></div>
+                  <div style="{{ t.lbl }}">{{ t.day }}</div>
+                  <div style="font-size:10px;color:#b4b4bc;font-weight:600;text-align:center;width:100%;overflow:hidden;white-space:nowrap">{{ t.wd }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="{{ mainGrid }}">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 14px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-if value="{{ isMobileV }}" hint-placeholder-val="{{ false }}"><div onClick="{{ openSupplier }}" style="height:34px;padding:0 14px;border-radius:999px;display:flex;align-items:center;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;border:1px dashed rgba(255,255,255,0.25);color:#f4f4f5">+ Dobavljač</div></sc-if>
+                <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                  <div onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}<span style="opacity:0.6;margin-left:6px">{{ c.count }}</span></div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;width:240px;max-width:100%">
+                <div style="width:11px;height:11px;border:2px solid #8b8b94;border-radius:50%"></div>
+                <input value="{{ q }}" onChange="{{ onQ }}" placeholder="Pretraži dobavljače" style="border:none;outline:none;background:transparent;flex:1;min-width:0;font-size:13.5px;color:#f4f4f5"></input>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px">
+              <sc-for list="{{ tiles }}" as="s" hint-placeholder-count="8">
+                <div onClick="{{ s.open }}" style="{{ s.tile }}" style-hover="transform:translateY(-2px);border-color:rgba(255,255,255,0.2)">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="{{ s.avatar }}">{{ s.initials }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div>
+                      <div style="{{ s.statusStyle }}">{{ s.label }}</div>
+                    </div>
+                  </div>
+                  <div style="font-size:24px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.totalNum }}<span style="font-size:12px;color:#8b8b94;margin-left:5px;font-weight:700">RSD</span></div>
+                  <div style="display:flex;gap:3px;height:6px">
+                    <sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="2"><div style="{{ g }}"></div></sc-for>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px">
+                    <div style="color:#8b8b94">{{ s.nextLabel }}</div>
+                    <div style="{{ s.nextStyle }}">{{ s.nextText }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noTiles }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:40px;text-align:center;color:#8b8b94;font-size:14px">Nema dobavljača za ovaj filter.</div>
+            </sc-if>
+          </div>
+
+          <div style="{{ panelStyle }}">
+            <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:22px;overflow:hidden">
+              <div style="padding:18px 18px 12px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:700;font-size:16px">Za plaćanje</div>
+                  <div style="font-size:12.5px;color:#8b8b94;margin-top:2px">Kasni i narednih {{ W }} dana</div>
+                </div>
+                <div style="min-width:30px;height:30px;padding:0 9px;border-radius:999px;background:rgba(245,180,40,0.16);color:#fcd34d;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center">{{ alertCount }}</div>
+              </div>
+              <div style="padding:0 10px 10px;display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.open }}" style="{{ a.card }}" style-hover="background:rgba(255,255,255,0.08)">
+                    <div style="{{ a.badge }}"><div style="font-size:15px;font-weight:800;line-height:1">{{ a.badgeNum }}</div><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ a.badgeUnit }}</div></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:700;font-size:14px">{{ a.sup }}</div>
+                      <div style="font-size:12px;color:#8b8b94;margin-top:2px">rok {{ a.due }} · br. {{ a.no }}</div>
+                    </div>
+                    <div style="font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ a.amt }}</div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ noAlerts }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:24px 10px;text-align:center;color:#8b8b94;font-size:14px">Nema faktura koje dospevaju.</div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#8b8b94;display:flex;gap:14px;flex-wrap:wrap;padding:0 6px">
+              <div>Podaci se čuvaju u ovom browseru.</div>
+              <div onClick="{{ resetDemo }}" style="cursor:pointer;text-decoration:underline">Vrati demo podatke</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSupplier }}" hint-placeholder-val="{{ false }}">
+        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:24px;padding:26px 28px;display:flex;flex-wrap:wrap;gap:24px 40px;align-items:center;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:18px;flex:1 1 320px;min-width:0">
+            <div style="width:76px;height:76px;border-radius:22px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0">{{ cur.initials }}</div>
+            <div style="min-width:0">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div style="font-size:30px;font-weight:800;letter-spacing:-0.03em">{{ cur.name }}</div>
+                <div style="{{ cur.pill }}">{{ cur.label }}</div>
+              </div>
+              <div style="font-size:13.5px;color:#a1a1aa;margin-top:6px">{{ cur.meta }}</div>
+            </div>
+          </div>
+          <div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:13px;color:#a1a1aa;font-weight:600">Ukupan dug</div>
+                <div style="font-size:34px;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ cur.totalNum }}<span style="font-size:15px;color:#8b8b94;margin-left:6px;font-weight:700;letter-spacing:0">RSD</span></div>
+              </div>
+              <button onClick="{{ openInvoiceCur }}" style="height:42px;padding:0 18px;border-radius:14px;border:none;background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff;cursor:pointer;font-size:14px;font-weight:700" style-hover="background:#ffffff">+ Nova faktura</button>
+            </div>
+            <div style="display:flex;gap:4px;height:10px">
+              <sc-for list="{{ cur.segs }}" as="g" hint-placeholder-count="3"><div style="{{ g }}"></div></sc-for>
+            </div>
+            <div style="display:flex;gap:8px 22px;flex-wrap:wrap;font-size:12.5px;font-weight:600">
+              <div style="display:flex;align-items:center;gap:7px;color:#fca5a5"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div>Kasni {{ cur.overFmt }}</div>
+              <div style="display:flex;align-items:center;gap:7px;color:#fcd34d"><div style="width:8px;height:8px;border-radius:50%;background:#f5b428"></div>{{ W }} dana {{ cur.soonFmt }}</div>
+              <div style="display:flex;align-items:center;gap:7px;color:#d4d4d8"><div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.6)"></div>Kasnije {{ cur.laterFmt }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="{{ supGrid }}">
+          <div style="min-width:0;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="font-weight:700;font-size:17px">Fakture <span style="color:#8b8b94;font-weight:500;font-size:13.5px">{{ invCountText }}</span></div>
+              <div onClick="{{ toggleHide }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#a1a1aa;user-select:none;font-weight:600">
+                <div>Sakrij plaćene</div>
+                <div style="{{ switchTrack }}"><div style="{{ switchKnob }}"></div></div>
+              </div>
+            </div>
+            <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#a1a1aa">
+                  <div style="{{ g.dot }}"></div>{{ g.title }}<span style="color:#5a5a62">{{ g.count }}</span>
+                </div>
+                <sc-for list="{{ g.items }}" as="r" hint-placeholder-count="2">
+                  <div style="{{ r.card }}">
+                    <div onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:16px 18px;cursor:pointer">
+                      <div style="{{ r.dateBlock }}">
+                        <div style="font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">{{ r.dueDay }}</div>
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px">{{ r.dueMon }}</div>
+                      </div>
+                      <div style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                          <div style="font-weight:700;font-size:14.5px">Faktura br. {{ r.no }} <span style="color:#8b8b94;font-weight:500;font-size:12.5px;margin-left:4px">izdata {{ r.date }}</span></div>
+                          <div style="{{ r.daysStyle }}">{{ r.daysText }}</div>
+                        </div>
+                        <div style="height:6px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden"><div style="{{ r.progress }}"></div></div>
+                        <div style="font-size:12.5px;color:#8b8b94;font-variant-numeric:tabular-nums">Uplaćeno {{ r.paid }} od {{ r.amt }}</div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:14px;margin-left:auto">
+                        <div style="text-align:right">
+                          <div style="font-size:11.5px;color:#8b8b94;font-weight:600">Saldo</div>
+                          <div style="font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.rem }}</div>
+                        </div>
+                        <sc-if value="{{ r.canPay }}" hint-placeholder-val="{{ true }}">
+                          <button onClick="{{ r.pay }}" style="height:38px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.08);color:#f4f4f5;cursor:pointer;font-size:13px;font-weight:700" style-hover="background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff">Uplata</button>
+                        </sc-if>
+                      </div>
+                    </div>
+                    <sc-if value="{{ r.expanded }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin:0 18px 16px;padding:10px 14px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:14px">
+                        <sc-for list="{{ r.payments }}" as="p" hint-placeholder-count="1">
+                          <div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13.5px;font-variant-numeric:tabular-nums">
+                            <div style="width:6px;height:6px;border-radius:50%;background:#4ade80"></div>
+                            <div>Uplata {{ p.date }}</div><div style="flex:1"></div><div style="font-weight:700">{{ p.amt }}</div>
+                            <div onClick="{{ p.del }}" style="cursor:pointer;color:#8b8b94;font-size:12px;text-decoration:underline">ukloni</div>
+                          </div>
+                        </sc-for>
+                        <sc-if value="{{ r.noPayments }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:13.5px;color:#8b8b94;padding:4px 0">Još nema uplata.</div>
+                        </sc-if>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">
+                          <div style="font-size:12.5px;color:#8b8b94">Rok {{ r.due }} · valuta {{ r.term }} dana</div>
+                          <div onClick="{{ r.del }}" style="cursor:pointer;color:#fca5a5;font-size:12.5px;font-weight:700">Obriši fakturu</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noGroups }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:40px 20px;text-align:center;color:#8b8b94;font-size:14px;border:1px dashed rgba(255,255,255,0.12);border-radius:18px">{{ noInvText }}</div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+            <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:22px;overflow:hidden">
+              <div style="padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center">
+                <div style="font-weight:700;font-size:15px">Kontakti komercijalista</div>
+                <div onClick="{{ openContact }}" style="cursor:pointer;font-size:12.5px;font-weight:700;background:rgba(255,255,255,0.09);padding:5px 11px;border-radius:999px">+ Dodaj</div>
+              </div>
+              <div style="padding:0 10px 10px">
+                <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="1">
+                  <div style="padding:10px;display:flex;gap:12px;align-items:center;border-radius:14px" style-hover="background:rgba(255,255,255,0.05)">
+                    <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">{{ c.initials }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:700;font-size:14px">{{ c.name }}</div>
+                      <div style="font-size:12px;color:#8b8b94">{{ c.role }}</div>
+                    </div>
+                    <a href="{{ c.tel }}" style="height:32px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff;font-size:12.5px;font-weight:700;display:flex;align-items:center;white-space:nowrap;text-decoration:none">{{ c.phone }}</a>
+                    <div onClick="{{ c.del }}" style="cursor:pointer;color:#8b8b94;font-size:18px;line-height:1;padding:2px 2px">×</div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ noContacts }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:12px 8px;color:#8b8b94;font-size:13.5px">Nema unetih kontakata.</div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));backdrop-filter:blur(40px) saturate(170%);-webkit-backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35);border-radius:22px;padding:6px 18px">
+              <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13.5px"><div style="color:#a1a1aa">PIB</div><div style="font-weight:600">{{ cur.pib }}</div></div>
+              <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13.5px"><div style="color:#a1a1aa">Valuta plaćanja</div><div style="font-weight:600">{{ cur.term }} dana</div></div>
+              <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:13.5px"><div style="color:#a1a1aa">Najbliži rok</div><div style="font-weight:600">{{ cur.next }}</div></div>
+            </div>
+            <div onClick="{{ deleteSupplier }}" style="font-size:12.5px;color:#8b8b94;cursor:pointer;text-decoration:underline;padding:0 6px">Obriši dobavljača</div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px">
+      <div onClick="{{ stop }}" style="width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;background:linear-gradient(135deg, rgba(70,72,80,0.55), rgba(40,41,46,0.45));backdrop-filter:blur(40px) saturate(170%);border:1px solid rgba(255,255,255,0.2);box-shadow:inset 0 1px 0 rgba(255,255,255,0.25);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,0.5);padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div style="font-size:18px;font-weight:800">{{ modalTitle }}</div>
+          <div onClick="{{ closeModal }}" style="cursor:pointer;font-size:22px;line-height:1;color:#8b8b94">×</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-if value="{{ m.invoice }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Dobavljač
+              <select value="{{ f.supplierId }}" onChange="{{ on.supplierId }}" style="height:44px;padding:0 10px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px">
+                <sc-for list="{{ supplierOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.name }}</option></sc-for>
+              </select>
+            </label>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Broj fakture
+                <input value="{{ f.number }}" onChange="{{ on.number }}" placeholder="npr. 1045/26" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Datum
+                <input type="date" value="{{ f.date }}" onChange="{{ on.date }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Iznos (RSD)
+                <input inputMode="decimal" value="{{ f.amount }}" onChange="{{ on.amount }}" placeholder="0,00" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Valuta (dana)
+                <input type="number" value="{{ f.term }}" onChange="{{ on.term }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+            </div>
+            <div style="background:rgba(255,255,255,0.09);border-radius:12px;padding:12px 14px;font-size:14px;display:flex;justify-content:space-between;gap:8px">
+              <div style="color:#d4d4d8">Rok plaćanja</div>
+              <div style="font-weight:800">{{ dueDatePreview }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ m.payment }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-weight:700">{{ payInv.sup }} · br. {{ payInv.no }}</div>
+              <div style="color:#a1a1aa;font-size:13px">Iznos {{ payInv.amt }} · preostalo <b style="color:#f4f4f5">{{ payInv.rem }}</b></div>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Datum uplate
+                <input type="date" value="{{ f.date }}" onChange="{{ on.date }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Iznos (RSD)
+                <input inputMode="decimal" value="{{ f.amount }}" onChange="{{ on.amount }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+            </div>
+            <div onClick="{{ fillFull }}" style="font-size:13px;cursor:pointer;font-weight:700;text-decoration:underline">Uplati ceo preostali iznos</div>
+          </sc-if>
+          <sc-if value="{{ m.supplier }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Naziv
+              <input value="{{ f.name }}" onChange="{{ on.name }}" placeholder="npr. Agrofina" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px"></input>
+            </label>
+            <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">PIB
+                <input value="{{ f.pib }}" onChange="{{ on.pib }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Valuta (dana)
+                <input type="number" value="{{ f.term }}" onChange="{{ on.term }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px;min-width:0;width:100%"></input>
+              </label>
+            </div>
+          </sc-if>
+          <sc-if value="{{ m.contact }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Ime i prezime
+              <input value="{{ f.name }}" onChange="{{ on.name }}" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px"></input>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Uloga
+              <input value="{{ f.role }}" onChange="{{ on.role }}" placeholder="Komercijalista" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px"></input>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#a1a1aa;font-weight:600">Telefon
+              <input type="tel" value="{{ f.phone }}" onChange="{{ on.phone }}" placeholder="06x xxx xxxx" style="height:44px;padding:0 12px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;font-size:15px"></input>
+            </label>
+          </sc-if>
+          <sc-if value="{{ err }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;color:#fca5a5;font-weight:600">{{ err }}</div>
+          </sc-if>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+            <button onClick="{{ closeModal }}" style="height:44px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);color:#f4f4f5;cursor:pointer;font-weight:600">Otkaži</button>
+            <button onClick="{{ submit }}" style="height:44px;padding:0 20px;border-radius:12px;border:none;background:rgba(255,255,255,0.88);color:#18181b;box-shadow:0 6px 20px rgba(255,255,255,0.12), inset 0 1px 0 #ffffff;cursor:pointer;font-weight:700">Sačuvaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;upozorenjeDana&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:1,&quot;max&quot;:30,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pravila&quot;},&quot;podrazumevaniRok&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:15,&quot;min&quot;:1,&quot;max&quot;:120,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pravila&quot;}}">
+const KEY = 'market-dugovanja-v1';
+const ST = {
+  kasni:   { label:'Kasni', fg:'#fca5a5', bg:'rgba(239,68,68,0.16)', solid:'#ef4444', p:0 },
+  uskoro:  { label:'Uskoro dospeva', fg:'#fcd34d', bg:'rgba(245,180,40,0.16)', solid:'#f5b428', p:1 },
+  otvoreno:{ label:'Otvoreno', fg:'#e4e4e7', bg:'rgba(255,255,255,0.1)', solid:'rgba(255,255,255,0.6)', p:2 },
+  placeno: { label:'Plaćeno', fg:'#a1a1aa', bg:'rgba(255,255,255,0.05)', solid:'#4ade80', p:3 },
+};
+const MONTHS = ['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+const WD = ['Ne','Po','Ut','Sr','Če','Pe','Su'];
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const todayISO = () => iso(new Date());
+const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + Number(n)); return iso(d); };
+const diffDays = (a, b) => Math.round((parseISO(a) - parseISO(b)) / 86400000);
+const r2 = n => Math.round(n * 100) / 100;
+const num = n => { const neg = n < 0; const [i, f] = Math.abs(n).toFixed(2).split('.'); return (neg ? '−' : '') + i.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + f; };
+const fmt = n => num(n) + ' RSD';
+const shortK = n => n <= 0 ? '' : n >= 1000 ? (n >= 100000 ? Math.round(n / 1000) : (Math.round(n / 100) / 10).toString().replace('.', ',')) + 'k' : Math.round(n) + '';
+const fdate = s => { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; };
+const dan = n => (n % 10 === 1 && n % 100 !== 11) ? 'dan' : 'dana';
+const fakt = n => n === 1 ? '1 faktura' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? `${n} fakture` : `${n} faktura`;
+const parseAmt = s => { s = String(s ?? '').replace(/\s|RSD/gi, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); return parseFloat(s); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const GLASS = { background: 'linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03))', backdropFilter: 'blur(40px) saturate(170%)', WebkitBackdropFilter: 'blur(40px) saturate(170%)', border: '1px solid rgba(255,255,255,0.16)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05), 0 24px 60px rgba(0,0,0,0.35)' };
+const segBar = (over, soon, later, empty) => {
+  const t = over + soon + later;
+  if (t <= 0) return [{ flex: 1, borderRadius: 999, background: empty || 'rgba(74,222,128,0.35)' }];
+  return [[over, '#ef4444'], [soon, '#f5b428'], [later, 'rgba(255,255,255,0.55)']].filter(([v]) => v > 0).map(([v, c]) => ({ flex: `${v} 1 0`, minWidth: 6, borderRadius: 999, background: c, boxShadow: c.startsWith('#') ? `0 0 12px ${c}66` : 'none' }));
+};
+
+function seed() {
+  const t = todayISO();
+  const spec = [
+    ['Agrofina', '104512873', [[56,26338.52,'f'],[45,53455.59,'f'],[42,27270.77,'f'],[31,69180.55,'f'],[39,46983.78,'f'],[28,28263.35,'f'],[22,45380.06,8301.55],[10,69991.22,0],[3,54798.86,0]], [{name:'Marko Petrović', role:'Komercijalista', phone:'064 123 4567'}]],
+    ['Bolero', '', [[40,18450,'f'],[25,12300.4,'f']], []],
+    ['Karizma', '', [[30,22100,'f'],[5,16288.18,0]], [{name:'Jelena Ilić', role:'Komercijalista', phone:'063 555 210'}]],
+    ['Mrvica', '', [[20,9870.5,'f'],[9,7420,'f']], []],
+    ['Euro2001', '', [[35,40210,'f'],[2,32438.36,0]], []],
+    ['Delt', '', [[18,14980.2,'f']], []],
+    ['Nenad Jaja', '', [[33,11200,'f'],[20,5443.2,0]], [{name:'Nenad', role:'Vlasnik', phone:'065 300 1122'}]],
+    ['Trikom', '', [[1,5206.9,0]], []],
+    ['Foren', '', [[10,29656.51,0],[4,28881.84,0]], []],
+    ['Marbo', '', [[26,21540,'f']], []],
+  ];
+  const suppliers = [], invoices = [], payments = [];
+  let no = 1000;
+  spec.forEach(([name, pib, invs, contacts]) => {
+    const sid = uid() + name.length;
+    suppliers.push({ id: sid, name, pib, term: 15, contacts: contacts.map(c => ({ ...c, id: uid() })) });
+    invs.forEach(([ago, amount, paid]) => {
+      const id = uid() + (no++);
+      const date = addDays(t, -ago);
+      invoices.push({ id, supplierId: sid, number: `${no}/26`, date, amount, term: 15 });
+      const p = paid === 'f' ? amount : paid;
+      if (p > 0) { let pd = addDays(date, 12); if (diffDays(pd, t) > 0) pd = t; payments.push({ id: uid(), invoiceId: id, date: pd, amount: p }); }
+    });
+  });
+  return { suppliers, invoices, payments };
+}
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.suppliers) return d; } catch (e) {}
+  const d = seed(); try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
+  return d;
+}
+
+class Component extends DCLogic {
+  state = { data: load(), view: 'home', sid: null, hidePaid: true, modal: null, form: {}, err: '', expanded: null, q: '', filter: 'svi', w: typeof window !== 'undefined' ? window.innerWidth : 1280 };
+  componentDidMount() {
+    try { let n = null, wn = window; for (let k = 0; k < 4 && wn && !n; k++) { try { n = new URLSearchParams(wn.location.search).get('s') || (wn.location.hash.match(/s=([^&]+)/) || [])[1] || (wn.frameElement && wn.frameElement.getAttribute('data-s')); } catch (e) {} wn = wn.parent === wn ? null : wn.parent; } n = n && decodeURIComponent(n); const s = n && this.state.data.suppliers.find(x => x.name.toLowerCase() === n.toLowerCase()); if (s) this.setState({ view: 'supplier', sid: s.id }); } catch (e) {}
+    this._r = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._r); }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); }
+  save(data, extra) { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} this.setState({ data, ...(extra || {}) }); }
+  go(view, sid) { this.setState({ view, sid: sid ?? null, expanded: null }); window.scrollTo(0, 0); }
+  open(modal, form) { this.setState({ modal, form, err: '' }); }
+  setF(k, v) { this.setState(s => ({ form: { ...s.form, [k]: v }, err: '' })); }
+
+  submit() {
+    const { modal, form: f, data } = this.state;
+    const T = todayISO();
+    if (modal === 'invoice') {
+      const amount = parseAmt(f.amount);
+      if (!f.supplierId) return this.setState({ err: 'Izaberite dobavljača.' });
+      if (!(amount > 0)) return this.setState({ err: 'Unesite ispravan iznos.' });
+      if (!f.date) return this.setState({ err: 'Unesite datum fakture.' });
+      const inv = { id: uid(), supplierId: f.supplierId, number: f.number || '—', date: f.date, amount: r2(amount), term: Number(f.term) || 15 };
+      this.save({ ...data, invoices: [...data.invoices, inv] }, { modal: null });
+    } else if (modal === 'payment') {
+      const amount = parseAmt(f.amount);
+      if (!(amount > 0)) return this.setState({ err: 'Unesite ispravan iznos.' });
+      this.save({ ...data, payments: [...data.payments, { id: uid(), invoiceId: f.invoiceId, date: f.date || T, amount: r2(amount) }] }, { modal: null });
+    } else if (modal === 'supplier') {
+      if (!String(f.name || '').trim()) return this.setState({ err: 'Unesite naziv dobavljača.' });
+      const s = { id: uid(), name: f.name.trim(), pib: f.pib || '', term: Number(f.term) || 15, contacts: [] };
+      this.save({ ...data, suppliers: [...data.suppliers, s] }, { modal: null, view: 'supplier', sid: s.id });
+    } else if (modal === 'contact') {
+      if (!String(f.name || '').trim()) return this.setState({ err: 'Unesite ime.' });
+      const c = { id: uid(), name: f.name.trim(), role: f.role || '', phone: f.phone || '' };
+      this.save({ ...data, suppliers: data.suppliers.map(s => s.id === this.state.sid ? { ...s, contacts: [...(s.contacts || []), c] } : s) }, { modal: null });
+    }
+  }
+
+  renderVals() {
+    const W = this.props.upozorenjeDana ?? 7;
+    const defTerm = this.props.podrazumevaniRok ?? 15;
+    const { data, view, sid, hidePaid, modal, form, expanded, w, q, filter } = this.state;
+    const T = todayISO();
+    const showSidebar = w >= 1100;
+    const mobile = w < 760;
+    const narrow = w < (showSidebar ? 1380 : 1100);
+
+    const payBy = {};
+    data.payments.forEach(p => { (payBy[p.invoiceId] = payBy[p.invoiceId] || []).push(p); });
+    const supById = {}; data.suppliers.forEach(s => { supById[s.id] = s; });
+    const info = inv => {
+      const pays = (payBy[inv.id] || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const paid = r2(pays.reduce((a, p) => a + p.amount, 0));
+      const rem = Math.max(0, r2(inv.amount - paid));
+      const due = addDays(inv.date, inv.term ?? 15);
+      const d = diffDays(due, T);
+      const status = rem <= 0 ? 'placeno' : d < 0 ? 'kasni' : d <= W ? 'uskoro' : 'otvoreno';
+      return { ...inv, pays, paid, rem, due, d, status };
+    };
+    const all = data.invoices.map(info);
+    const daysText = i => i.status === 'placeno' ? 'izmireno' : i.d < 0 ? `kasni ${-i.d} ${dan(-i.d)}` : i.d === 0 ? 'dospeva danas' : i.d === 1 ? 'dospeva sutra' : `za ${i.d} ${dan(i.d)}`;
+    const tone = st => st === 'kasni' ? ST.kasni.fg : st === 'uskoro' ? ST.uskoro.fg : st === 'placeno' ? '#86efac' : '#a1a1aa';
+    const pill = st => ({ display: 'inline-flex', alignItems: 'center', height: 26, padding: '0 11px', borderRadius: 999, background: ST[st].bg, color: ST[st].fg, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' });
+
+    const agg = s => {
+      const inv = all.filter(i => i.supplierId === s.id);
+      const sum = f => r2(inv.filter(f).reduce((a, i) => a + i.rem, 0));
+      const total = sum(i => i.rem > 0), soon = sum(i => i.status === 'uskoro'), over = sum(i => i.status === 'kasni');
+      const open = inv.filter(i => i.rem > 0).sort((a, b) => a.due.localeCompare(b.due));
+      const status = over > 0 ? 'kasni' : soon > 0 ? 'uskoro' : total > 0 ? 'otvoreno' : 'placeno';
+      return { s, inv, total, soon, over, later: r2(total - soon - over), next: open[0], openCount: open.length, status };
+    };
+    const aggs = data.suppliers.map(agg).sort((a, b) => ST[a.status].p - ST[b.status].p || b.total - a.total || a.s.name.localeCompare(b.s.name));
+    const totDebt = r2(aggs.reduce((a, x) => a + x.total, 0));
+    const totSoon = r2(aggs.reduce((a, x) => a + x.soon, 0));
+    const totOver = r2(aggs.reduce((a, x) => a + x.over, 0));
+    const totLater = r2(totDebt - totSoon - totOver);
+    const openInv = all.filter(i => i.rem > 0);
+    const cnt = st => openInv.filter(i => i.status === st).length;
+
+    const ql = q.trim().toLowerCase();
+    const filters = [['svi', 'Svi'], ['kasni', 'Kasni'], ['uskoro', 'Uskoro'], ['otvoreno', 'Otvoreno'], ['placeno', 'Plaćeno']];
+    const chips = filters.map(([k, label]) => {
+      const on = filter === k;
+      return { label, count: k === 'svi' ? aggs.length : aggs.filter(x => x.status === k).length, pick: () => this.setState({ filter: k }),
+        style: { height: 34, padding: '0 14px', borderRadius: 999, display: 'flex', alignItems: 'center', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', background: on ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.07)', backdropFilter: 'blur(20px)', color: on ? '#18181b' : '#e4e4e7', border: on ? '1px solid rgba(255,255,255,0.9)' : '1px solid rgba(255,255,255,0.14)' } };
+    });
+    const tiles = aggs.filter(x => (filter === 'svi' || x.status === filter) && (!ql || x.s.name.toLowerCase().includes(ql))).map(x => {
+      const st = x.status;
+      const glow = st === 'kasni' ? 'radial-gradient(260px 140px at 100% 0%, rgba(239,68,68,0.18), transparent 70%), ' : st === 'uskoro' ? 'radial-gradient(260px 140px at 100% 0%, rgba(245,180,40,0.15), transparent 70%), ' : '';
+      const ni = x.next;
+      return {
+        name: x.s.name, initials: initials(x.s.name), label: st === 'placeno' ? 'Sve izmireno' : `${ST[st].label} · ${fakt(x.openCount)}`,
+        totalNum: num(x.total), segs: segBar(x.over, x.soon, x.later),
+        nextLabel: ni ? `Rok ${fdate(ni.due)}` : 'Nema otvorenih faktura', nextText: ni ? daysText(ni) : '',
+        nextStyle: { fontWeight: 700, color: ni ? tone(ni.status) : '#a1a1aa', whiteSpace: 'nowrap' },
+        statusStyle: { fontSize: 12, fontWeight: 600, color: tone(st), marginTop: 2 },
+        avatar: { width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: ST[st].bg, color: st === 'placeno' ? '#d4d4d8' : ST[st].fg, border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 },
+        tile: { ...GLASS, background: glow + GLASS.background, border: st === 'kasni' ? '1px solid rgba(239,68,68,0.35)' : st === 'uskoro' ? '1px solid rgba(245,180,40,0.3)' : GLASS.border, borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 14, cursor: 'pointer', transition: 'transform .15s, border-color .15s', opacity: st === 'placeno' ? 0.72 : 1 },
+        open: () => this.go('supplier', x.s.id),
+      };
+    });
+    const sideSuppliers = aggs.slice().sort((a, b) => a.s.name.localeCompare(b.s.name)).map(x => {
+      const active = view === 'supplier' && sid === x.s.id;
+      return { name: x.s.name, short: shortK(x.total) || '—', open: () => this.go('supplier', x.s.id),
+        initials: initials(x.s.name), avatar: { width: 28, height: 28, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 800, background: active ? '#f4f4f5' : ST[x.status].bg, color: active ? '#18181b' : (x.status === 'placeno' ? '#a1a1aa' : ST[x.status].fg) },
+        amtStyle: { fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: x.status === 'kasni' ? ST.kasni.fg : x.status === 'uskoro' ? ST.uskoro.fg : '#8b8b94' },
+        navStyle: { display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', borderRadius: 12, cursor: 'pointer', fontSize: 13.5, fontWeight: active ? 700 : 500, background: active ? 'rgba(255,255,255,0.1)' : 'transparent', color: active ? '#f4f4f5' : '#d4d4d8' } };
+    });
+
+    const alertInv = all.filter(i => i.status === 'kasni' || i.status === 'uskoro').sort((a, b) => a.due.localeCompare(b.due));
+    const alerts = alertInv.map(i => {
+      const k = i.status === 'kasni';
+      return { sup: supById[i.supplierId]?.name || '—', no: i.number, amt: fmt(i.rem), due: fdate(i.due),
+        badgeNum: i.d === 0 ? '0' : Math.abs(i.d), badgeUnit: k ? 'kasni' : i.d === 0 ? 'danas' : dan(i.d),
+        badge: { width: 46, height: 46, borderRadius: 13, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: k ? 'rgba(239,68,68,0.18)' : 'rgba(245,180,40,0.16)', color: k ? '#fca5a5' : '#fcd34d' },
+        card: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 16, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' },
+        open: () => this.go('supplier', i.supplierId) };
+    });
+    const overCount = cnt('kasni'), soonCount = cnt('uskoro'), laterCount = cnt('otvoreno');
+
+    const overSum = r2(openInv.filter(i => i.d < 0).reduce((a, i) => a + i.rem, 0));
+    const tcols = [{ key: 'over', sum: overSum, list: openInv.filter(i => i.d < 0), day: '!', wd: 'kasni', k: -1 }];
+    const TL = this.state.w < 760 ? 8 : 14;
+    for (let k = 0; k <= TL; k++) { const ds = addDays(T, k); const list = openInv.filter(i => i.due === ds); tcols.push({ key: ds, sum: r2(list.reduce((a, i) => a + i.rem, 0)), list, day: parseISO(ds).getDate(), wd: WD[parseISO(ds).getDay()], k }); }
+    const tmax = Math.max(1, ...tcols.map(c => c.sum));
+    const timeline = tcols.map(c => {
+      const color = c.k < 0 ? '#ef4444' : c.k <= W ? '#f5b428' : 'rgba(255,255,255,0.6)';
+      const has = c.sum > 0;
+      return { amt: shortK(c.sum), day: c.day, wd: c.wd,
+        tip: c.list.map(i => `${supById[i.supplierId]?.name}: ${fmt(i.rem)}`).join('\n'),
+        open: has ? () => this.go('supplier', c.list[0].supplierId) : null,
+        col: { flex: c.k < 0 ? 1.9 : 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: has ? 'pointer' : 'default', ...(c.k < 0 ? { marginRight: 6, paddingRight: 8, borderRight: '1px dashed rgba(255,255,255,0.12)' } : {}) },
+        bar: { width: '100%', height: has ? `${Math.max(8, c.sum / tmax * 100)}%` : 4, borderRadius: 8, background: has ? color : 'rgba(255,255,255,0.07)', boxShadow: has && color.startsWith('#') ? `0 0 16px ${color}55` : 'none' },
+        lbl: { fontSize: 12, fontWeight: 800, textAlign: 'center', fontVariantNumeric: 'tabular-nums', color: c.k === 0 ? '#18181b' : c.k < 0 ? '#fca5a5' : '#f4f4f5', background: c.k === 0 ? '#f4f4f5' : 'transparent', borderRadius: 7, padding: '2px 0', width: '100%' } };
+    });
+
+    const curAgg = view === 'supplier' ? aggs.find(x => x.s.id === sid) : null;
+    let cur = { name: '', initials: '', pib: '', term: '', next: '', meta: '', pill: {}, label: '', totalNum: '', overFmt: '', soonFmt: '', laterFmt: '', segs: [] }, groups = [], contacts = [], invTotal = 0, shown = 0;
+    if (curAgg) {
+      const s = curAgg.s;
+      cur = { name: s.name, initials: initials(s.name), pib: s.pib || '—', term: s.term ?? 15, next: curAgg.next ? fdate(curAgg.next.due) : '—',
+        meta: [s.pib ? `PIB ${s.pib}` : null, `Valuta ${s.term ?? 15} dana`, `${fakt(curAgg.openCount)} otvoreno`].filter(Boolean).join(' · '),
+        pill: pill(curAgg.status), label: ST[curAgg.status].label, totalNum: num(curAgg.total), overFmt: fmt(curAgg.over), soonFmt: fmt(curAgg.soon), laterFmt: fmt(curAgg.later),
+        segs: segBar(curAgg.over, curAgg.soon, curAgg.later) };
+      const sorted = curAgg.inv.slice().sort((a, b) => a.date.localeCompare(b.date));
+      invTotal = sorted.length;
+      const mk = i => {
+        const pct = i.amount > 0 ? Math.min(100, i.paid / i.amount * 100) : 0;
+        const st = i.status;
+        return { no: i.number, date: fdate(i.date), amt: fmt(i.amount), due: fdate(i.due), dueDay: i.due.slice(8), dueMon: MONTHS[parseISO(i.due).getMonth()],
+          daysText: daysText(i), daysStyle: { fontSize: 12.5, fontWeight: 700, color: tone(st), whiteSpace: 'nowrap' },
+          paid: fmt(i.paid), rem: fmt(i.rem), term: i.term ?? 15, canPay: i.rem > 0, expanded: expanded === i.id,
+          progress: { width: `${pct}%`, height: '100%', borderRadius: 999, background: st === 'placeno' ? '#4ade80' : '#f4f4f5' },
+          dateBlock: { width: 58, height: 58, borderRadius: 16, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: ST[st].bg, color: st === 'placeno' || st === 'otvoreno' ? '#f4f4f5' : ST[st].fg, border: '1px solid rgba(255,255,255,0.08)' },
+          card: { ...GLASS, borderRadius: 20, overflow: 'hidden', border: st === 'kasni' ? '1px solid rgba(239,68,68,0.35)' : st === 'uskoro' ? '1px solid rgba(245,180,40,0.3)' : GLASS.border, opacity: st === 'placeno' ? 0.75 : 1 },
+          payments: i.pays.map(p => ({ date: fdate(p.date), amt: fmt(p.amount), del: () => { if (confirm('Ukloniti ovu uplatu?')) this.save({ ...data, payments: data.payments.filter(x => x.id !== p.id) }); } })),
+          noPayments: i.pays.length === 0,
+          toggle: () => this.setState({ expanded: expanded === i.id ? null : i.id }),
+          pay: e => { e && e.stopPropagation(); this.open('payment', { invoiceId: i.id, date: T, amount: num(i.rem) }); },
+          del: () => { if (confirm('Obrisati fakturu i njene uplate?')) this.save({ ...data, invoices: data.invoices.filter(x => x.id !== i.id), payments: data.payments.filter(x => x.invoiceId !== i.id) }); } };
+      };
+      const order = [['kasni', 'Kasni'], ['uskoro', `Dospeva u ${W} dana`], ['otvoreno', 'Otvoreno'], ['placeno', 'Plaćeno']];
+      groups = order.filter(([k]) => !(hidePaid && k === 'placeno')).map(([k, title]) => {
+        const items = (k === 'placeno' ? sorted.slice().reverse() : sorted.slice().sort((a, b) => a.due.localeCompare(b.due))).filter(i => i.status === k).map(mk);
+        return { title, count: items.length, items, dot: { width: 8, height: 8, borderRadius: '50%', background: ST[k].solid } };
+      }).filter(g => g.items.length);
+      shown = groups.reduce((a, g) => a + g.items.length, 0);
+      contacts = (s.contacts || []).map(c => ({ ...c, initials: initials(c.name), tel: 'tel:' + String(c.phone || '').replace(/\s/g, ''), del: () => { if (confirm('Ukloniti kontakt?')) this.save({ ...data, suppliers: data.suppliers.map(x => x.id === s.id ? { ...x, contacts: x.contacts.filter(k => k.id !== c.id) } : x) }); } }));
+    }
+
+    const payI = modal === 'payment' ? all.find(i => i.id === form.invoiceId) : null;
+    const payInv = payI ? { sup: supById[payI.supplierId]?.name, no: payI.number, amt: fmt(payI.amount), rem: fmt(payI.rem) } : {};
+    const on = {};
+    ['number', 'date', 'amount', 'term', 'name', 'pib', 'role', 'phone'].forEach(k => { on[k] = e => this.setF(k, e.target.value); });
+    on.supplierId = e => { const v = e.target.value; this.setState(st => ({ form: { ...st.form, supplierId: v, term: supById[v]?.term ?? defTerm } })); };
+    const openInvoice = sId => this.open('invoice', { supplierId: sId || data.suppliers[0]?.id || '', number: '', date: T, amount: '', term: supById[sId]?.term ?? defTerm });
+    const dueDatePreview = form.date && form.term !== '' && Number(form.term) >= 0 ? fdate(addDays(form.date, Number(form.term))) : '—';
+    const isHome = view === 'home' || !curAgg;
+    const debtCount = aggs.filter(x => x.total > 0).length;
+
+    return {
+      tlDays: mobile ? 8 : 14,
+      W, showSidebar, isCompact: !showSidebar, notMobile: !mobile, isMobileV: mobile,
+      headRow: { maxWidth: 1360, margin: '0 auto', padding: mobile ? '10px 16px' : '14px 24px', display: 'flex', alignItems: 'center', gap: mobile ? '8px 10px' : 12, flexWrap: 'wrap' },
+      pillsWrap: mobile ? { order: 10, width: '100%', display: 'flex', gap: 8, overflowX: 'auto', flexWrap: 'nowrap', scrollbarWidth: 'none' } : { display: 'flex', gap: 8 }, isHome, isSupplier: !!curAgg,
+      goHome: () => this.go('home'),
+      navBadge: { minWidth: 22, height: 22, padding: '0 7px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 800, background: overCount ? '#ef4444' : '#f5b428', color: '#18181b' },
+      supplierCount: data.suppliers.length,
+      navHomeStyle: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 14, background: isHome ? '#f4f4f5' : 'transparent', color: isHome ? '#18181b' : '#d4d4d8' },
+      sideSuppliers, q, onQ: e => this.setState({ q: e.target.value }), chips, tiles, noTiles: tiles.length === 0,
+      openSupplier: () => this.open('supplier', { name: '', pib: '', term: defTerm }),
+      openInvoiceTop: () => openInvoice(curAgg ? curAgg.s.id : null),
+      openInvoiceCur: () => openInvoice(curAgg?.s.id),
+      openContact: () => this.open('contact', { name: '', role: 'Komercijalista', phone: '' }),
+      hasOverdue: totOver > 0, hasSoon: totSoon > 0, alertCount: alertInv.length,
+      totalOverdueShort: shortK(totOver), totalSoonShort: shortK(totSoon),
+      overdueCountText: fakt(overCount), soonCountText: fakt(soonCount), laterCountText: fakt(laterCount),
+      todayFmt: fdate(T), totalDebtNum: num(totDebt), totalSoonFmt: fmt(totSoon), totalOverdueFmt: fmt(totOver), totalLaterFmt: fmt(totLater),
+      segs: segBar(totOver, totSoon, totLater), timeline,
+      debtSuppliersText: `${debtCount} od ${data.suppliers.length} dobavljača sa dugom`,
+      alerts, noAlerts: alerts.length === 0,
+      topGrid: { display: 'grid', gridTemplateColumns: mobile ? 'minmax(0,1fr)' : 'minmax(0,1.15fr) minmax(0,1fr)', gap: 16, marginBottom: 22 },
+      mainGrid: { display: 'grid', gridTemplateColumns: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 340px', gap: 18, alignItems: 'start' },
+      panelStyle: { display: 'flex', flexDirection: 'column', gap: 12, position: narrow ? 'static' : 'sticky', top: 84, order: narrow ? -1 : 0, minWidth: 0 },
+      supGrid: { display: 'grid', gridTemplateColumns: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 330px', gap: 18, alignItems: 'start' },
+      cur, groups, noGroups: groups.length === 0,
+      noInvText: invTotal === 0 ? 'Još nema faktura za ovog dobavljača.' : 'Sve fakture su plaćene.',
+      invCountText: hidePaid ? `${shown} aktivnih od ${invTotal}` : `${invTotal}`,
+      toggleHide: () => this.setState({ hidePaid: !hidePaid }),
+      switchTrack: { width: 36, height: 21, borderRadius: 999, background: hidePaid ? '#f4f4f5' : 'rgba(255,255,255,0.16)', position: 'relative', transition: 'background .15s' },
+      switchKnob: { position: 'absolute', top: 2.5, left: hidePaid ? 17 : 3, width: 16, height: 16, borderRadius: '50%', background: hidePaid ? '#18191c' : '#fff', transition: 'left .15s' },
+      contacts, noContacts: contacts.length === 0,
+      deleteSupplier: () => { if (curAgg && confirm(`Obrisati dobavljača ${curAgg.s.name} i sve njegove fakture?`)) { const ids = new Set(curAgg.inv.map(i => i.id)); this.save({ suppliers: data.suppliers.filter(x => x.id !== curAgg.s.id), invoices: data.invoices.filter(i => !ids.has(i.id)), payments: data.payments.filter(p => !ids.has(p.invoiceId)) }, { view: 'home', sid: null }); } },
+      resetDemo: () => { if (confirm('Zameniti sve podatke demo podacima?')) this.save(seed(), { view: 'home' }); },
+      modalOpen: !!modal, m: { invoice: modal === 'invoice', payment: modal === 'payment', supplier: modal === 'supplier', contact: modal === 'contact' },
+      modalTitle: { invoice: 'Nova faktura', payment: 'Unos uplate', supplier: 'Novi dobavljač', contact: 'Novi kontakt' }[modal] || '',
+      f: form, on, err: this.state.err, payInv, dueDatePreview,
+      supplierOptions: data.suppliers.map(s => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name)),
+      fillFull: () => payI && this.setF('amount', num(payI.rem)),
+      closeModal: () => this.setState({ modal: null }),
+      stop: e => e.stopPropagation(),
+      submit: () => this.submit(),
+    };
+  }
+}
+</script>
+</body>
+</html>
