@@ -16,6 +16,22 @@ document.addEventListener('alpine:init', () => {
     err: cfg.err || '',
     pay: cfg.pay || {},
 
+    // Ekran na kasi stoji otvoren danima: osvežava se svakih 10 minuta i posle ponoći,
+    // ali nikad dok je otvoren prozor za unos ili dok se kuca u polje (npr. pretraga).
+    init() {
+      const localDay = () => new Date().toDateString();
+      const loadedOn = localDay();
+      const busy = () => this.modal || ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+      let last = Date.now();
+      setInterval(() => {
+        if (busy()) return;
+        if (Date.now() - last >= 10 * 60 * 1000 || localDay() !== loadedOn) location.reload();
+      }, 30 * 1000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && localDay() !== loadedOn && !busy()) location.reload(); });
+      // Svaka akcija korisnika pomera rok, da se stranica ne osveži usred rada.
+      ['click', 'keydown'].forEach(ev => document.addEventListener(ev, () => { last = Date.now(); }, { passive: true }));
+    },
+
     get title() {
       return { invoice: 'Nova faktura', payment: 'Unos uplate', supplier: 'Novi dobavljač', contact: 'Novi kontakt' }[this.modal] || '';
     },
