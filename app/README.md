@@ -40,9 +40,16 @@ Testovi se pokreću sa `php artisan test`.
    APP_ENV=production
    APP_DEBUG=false
    APP_URL=https://vas-domen.rs
-   DB_DATABASE=… DB_USERNAME=… DB_PASSWORD=…
-   MAIL_MAILER=smtp  MAIL_HOST=mail.vas-domen.rs  MAIL_PORT=465  MAIL_SCHEME=smtps
-   MAIL_USERNAME=…  MAIL_PASSWORD=…  MAIL_FROM_ADDRESS=dugovanja@vas-domen.rs
+   DB_DATABASE=…
+   DB_USERNAME=…
+   DB_PASSWORD=…
+   MAIL_MAILER=smtp
+   MAIL_HOST=mail.vas-domen.rs
+   MAIL_PORT=465
+   MAIL_SCHEME=smtps
+   MAIL_USERNAME=…
+   MAIL_PASSWORD=…
+   MAIL_FROM_ADDRESS=dugovanja@vas-domen.rs
    PODSETNIK_EMAIL=vi@example.com
    ```
 6. **Inicijalizacija:** pokrenite preko SSH-a ili privremeno preko cPanel „Terminal“:
