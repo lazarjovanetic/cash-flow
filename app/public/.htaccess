@@ -5,6 +5,14 @@
 
     RewriteEngine On
 
+    # Uvek HTTPS (kolačić za prijavu se šalje samo preko HTTPS-a)
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$
+    # Originalna adresa iz zahteva (i kad root .htaccess prosleđuje u public/)
+    RewriteCond %{THE_REQUEST} ^\S+\s+([^?\s]*)
+    RewriteRule ^ https://%{HTTP_HOST}%1 [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
